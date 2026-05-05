@@ -1,16 +1,16 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
----
 services:
   yubal:
     build: .
     image: yubal:local
     container_name: yubal
-    user: 1000:1000
-    environment:
-      YUBAL_PORT: 8000
-      YUBAL_TZ: Europe/Madrid
     ports:
       - 8000:8000
+    environment:
+      PUID: 1000
+      PGID: 1000
+      YUBAL_SCHEDULER_CRON: "0 0 * * *"
+      YUBAL_DOWNLOAD_UGC: false
+      YUBAL_TZ: Europe/Paris
     volumes:
       - ./data:/app/data
       - ./config:/app/config
