@@ -17,7 +17,7 @@ from yubal.utils.filename import (
     clean_filename,
     format_playlist_filename,
 )
-from yubal.utils.url import is_single_track_url, parse_playlist_id, parse_video_id
+from yubal.utils.url import is_single_track_url, parse_playlist_id, parse_video_id, parse_artist_id
 
 __all__ = [
     "build_track_path",
@@ -32,5 +32,6 @@ __all__ = [
     "is_single_track_url",
     "parse_playlist_id",
     "parse_video_id",
+    "parse_artist_id",
     "write_playlist_cover",
 ]

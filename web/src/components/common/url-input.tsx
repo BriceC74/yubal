@@ -13,7 +13,7 @@ export function UrlInput({
   value,
   onChange,
   disabled,
-  placeholder = "Album or playlist URL",
+  placeholder = "Album or playlist or artist URL",
 }: Props) {
   const isValid = value === "" || YOUTUBE_URL_PATTERN.test(value);
 

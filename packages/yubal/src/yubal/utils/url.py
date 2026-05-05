@@ -7,6 +7,8 @@ from yubal.exceptions import PlaylistParseError
 
 PLAYLIST_ID_PATTERN = re.compile(r"list=([A-Za-z0-9_-]+)")
 VIDEO_ID_PATTERN = re.compile(r"v=([A-Za-z0-9_-]+)")
+ARTIST_ID_PATTERN = re.compile(r"@([A-Za-z0-9_-]+)")
+CHANNEL_ID_PATTERN = re.compile(r"/channel/([A-Za-z0-9_-]+)")
 
 # Path-based video ID patterns (youtu.be, shorts, live, embed)
 _PATH_VIDEO_ID_PATTERN = re.compile(r"^/(?:shorts|live|embed|e|v|vi)/([A-Za-z0-9_-]+)")
@@ -99,6 +101,31 @@ def parse_video_id(url: str) -> str | None:
     # Extract video ID from path-based URLs (youtu.be, shorts, live, embed)
     return _parse_video_id_from_path(url)
 
+def parse_artist_id(url: str) -> str:
+    """Extract artist ID from YouTube Music URL.
+
+    Args:
+        url: Full YouTube Music artist URL.
+
+    Returns:
+        The artist ID string.
+
+    Returns:
+        Artist ID string, or None if not a recognized path-based URL.
+    """
+    # Validate URL length
+    if not url or len(url) > MAX_URL_LENGTH:
+        return None
+
+    # Extract artist ID from @
+    if match := ARTIST_ID_PATTERN.search(url):
+        return match.group(1)
+    # Extract artist ID from channel/xxx
+    if match := CHANNEL_ID_PATTERN.search(url):
+        return match.group(1)
+
+    return None
+
 
 def is_single_track_url(url: str) -> bool:
     """Check if URL is a single track (not a playlist).
@@ -126,6 +153,9 @@ def is_supported_url(url: str) -> bool:
 
     url = url.strip()
 
+    # Artist URL (has @abc or channel/xxxx)
+    if ARTIST_ID_PATTERN.search(url) or CHANNEL_ID_PATTERN.search(url):
+        return True
     # Playlist URL (has list= parameter)
     if PLAYLIST_ID_PATTERN.search(url):
         return True

@@ -6,8 +6,22 @@ from yubal.utils import (
     is_single_track_url,
     parse_playlist_id,
     parse_video_id,
+    parse_artist_id,
 )
 from yubal.utils.url import is_supported_url
+
+class TestParseArtistId:
+    """Tests for parse_artist_id function."""
+
+    def test_extracts_from_music_youtube_url(self) -> None:
+        """Should extract artist ID from YouTube Music URL."""
+        url = "https://music.youtube.com/@abc123"
+        assert parse_artist_id(url) == "abc123"
+
+    def test_returns_none_for_artist_url(self) -> None:
+        """Should return None for none conventionnal URL."""
+        url = "https://music.youtube.com/abc123"
+        assert parse_artist_id(url) is None
 
 
 class TestParseVideoId:
@@ -217,6 +231,8 @@ class TestIsSupportedUrl:
             "https://m.youtube.com/playlist?list=PLtest",
             # Browse URLs
             "https://music.youtube.com/browse/MPREb_test",
+            # Artist URLs
+            "https://music.youtube.com/@abc123",
             # youtu.be short URLs
             "https://youtu.be/abc123",
             "http://youtu.be/abc123",
@@ -245,7 +261,6 @@ class TestIsSupportedUrl:
             "https://music.youtube.com/",
             "https://music.youtube.com/watch",
             "https://youtube.com/",
-            "https://youtube.com/channel/abc",
             "https://youtube.com/browse/VLPLxyz",
             "not a url",
         ],

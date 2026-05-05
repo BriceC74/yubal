@@ -7,6 +7,11 @@ const VALID_YOUTUBE_MUSIC_URLS = [
   "https://music.youtube.com/browse/VLPLxyz123",
   "https://music.youtube.com/browse/MPREb_abc123",
   "https://music.youtube.com/watch?v=dQw4w9WgXcQ",
+  "https://music.youtube.com/@abc",
+  "https://music.youtube.com/@Abc",
+  "https://music.youtube.com/@123",
+  "https://music.youtube.com/@$Abc",
+  "https://music.youtube.com/channel/MPREb_abc123",
 ];
 
 const VALID_YOUTUBE_URLS = [
@@ -47,7 +52,6 @@ const INVALID_URLS = [
   ["Spotify URL", "https://spotify.com/playlist/abc"],
   ["SoundCloud URL", "https://soundcloud.com/track/xyz"],
   ["YouTube homepage", "https://youtube.com/"],
-  ["YouTube channel", "https://youtube.com/channel/abc"],
   ["plain text", "not a url"],
   ["missing protocol", "youtube.com/watch?v=abc"],
   ["YouTube browse (not music)", "https://youtube.com/browse/VLPLxyz"],

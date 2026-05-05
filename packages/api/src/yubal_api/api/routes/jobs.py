@@ -3,7 +3,6 @@
 Handles job lifecycle: creation, listing, cancellation, and deletion.
 Jobs are processed sequentially in FIFO order.
 """
-
 import asyncio
 from collections.abc import AsyncIterator
 
@@ -20,6 +19,7 @@ from yubal_api.api.exceptions import (
     JobConflictError,
     JobNotFoundError,
     QueueFullError,
+    ArtistNotFound,
 )
 from yubal_api.domain.job import Job
 from yubal_api.schemas.jobs import (
@@ -31,6 +31,10 @@ from yubal_api.schemas.jobs import (
     SnapshotEvent,
 )
 from yubal_api.services.job_store import JobStore
+
+from yubal_api.api.deps import PlaylistInfoServiceDep
+
+from yubal.utils import parse_artist_id
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
@@ -50,16 +54,60 @@ def _get_job_or_raise(job_store: JobStore, job_id: str) -> Job:
 async def create_job(
     request: CreateJobRequest,
     job_executor: JobExecutorDep,
+    playlist_info: PlaylistInfoServiceDep,
 ) -> JobCreatedResponse:
     """Create a new sync job.
 
     Jobs are queued and executed sequentially. Returns 409 if queue is full.
     """
-    job = job_executor.create_and_start_job(request.url, request.max_items)
+    def _create_job_or_fail(url, max_items):
+        job = job_executor.create_and_start_job(url, max_items)
+        if job is None:
+            raise QueueFullError()
+        return job
 
-    if job is None:
-        raise QueueFullError()
+    def _create_artist_jobs(artist_id: str, max_items: int | None) -> str | None:
+        """Create jobs for all artist albums. Returns batch ID or None."""
+        # Try direct get_artist first (handles case-insensitive)
+        try:
+            search_results = playlist_info._client._ytm.search(artist_id, filter="artists", limit=1)
+        except Exception:
+            artist = None
 
+        if not search_results:
+            try:
+                artist = playlist_info._client._ytm.get_artist(artist_id)
+            except Exception:
+                artist = None
+        else:
+            artist_browseId = search_results[0]["browseId"]
+            artist = playlist_info._client._ytm.get_artist(artist_browseId)
+
+        if not artist or "albums" not in artist:
+            raise ArtistNotFound()
+
+        artist_albums = artist["albums"]["results"]
+
+        artist_albums_browseId = artist["albums"]["browseId"]
+        if artist_albums_browseId is not None:
+            artist_albums_params = artist["albums"]["params"]
+            artist_albums = playlist_info._client._ytm.get_artist_albums(
+                artist_albums_browseId, params=artist_albums_params
+            )
+
+        for album in artist_albums:
+            playlistId = album.get("playlistId") or album["audioPlaylistId"]
+            album_url = f"https://music.youtube.com/playlist?list={playlistId}"
+            job_executor.create_and_start_job(album_url, max_items)
+        return f"{artist_id}-batch"
+
+    artist_id = parse_artist_id(request.url)
+    if artist_id:
+        batch_id = _create_artist_jobs(artist_id, request.max_items)
+        if batch_id:
+            return JobCreatedResponse(id=batch_id)
+
+    job = _create_job_or_fail(request.url, request.max_items)
     return JobCreatedResponse(id=job.id)
 
 

@@ -76,6 +76,15 @@ class QueueFullError(APIError):
     def __init__(self) -> None:
         super().__init__("Job queue is full. Wait for existing jobs to complete.")
 
+class ArtistNotFound(APIError):
+    """Raised when the artist is not found."""
+
+    status_code = status.HTTP_404_NOT_FOUND
+    error_code = "artist_not_found"
+
+    def __init__(self) -> None:
+        super().__init__("Artist is not found. Use channel url (https://music.youtube.com/channel/UCYx21h...) or request elements one by one")
+
 
 # -- Subscription Exceptions --
 
